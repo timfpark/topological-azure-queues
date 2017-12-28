@@ -19,6 +19,9 @@ class AzureQueueConnection extends Connection {
     }
 
     complete(message, callback) {
+        if (!callback) {
+            callback = () => {};
+        }
         this.azureQueueService.deleteMessage(this.config.queueName, message.messageId, message.popReceipt, callback);
     }
 

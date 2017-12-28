@@ -14,14 +14,15 @@ describe('AzureQueueConnection', function() {
                 fixtures.connection.complete(message, done);
             });
 
-            fixtures.connection.enqueue([{
-                body: {
-                    number: 1
-                }
-            }], err => {
-                console.log(err);
-                assert(!err);
-            });
+            setTimeout( () => {
+                fixtures.connection.enqueue([{
+                    body: {
+                        number: 1
+                    }
+                }], err => {
+                    assert(!err);
+                });
+            }, 3000);
          });
      });
 });

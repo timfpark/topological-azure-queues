@@ -6,7 +6,7 @@ class AzureQueueConnection extends Connection {
     constructor(config) {
         super(config);
 
-        this.backoffMilliseconds = this.backoffMilliseconds || 1000;
+        this.config.queueBackoff = 1000;
     }
 
     start(callback) {
@@ -28,14 +28,39 @@ class AzureQueueConnection extends Connection {
         }, callback);
     }
 
-    dequeue(callback) {
+    dequeueImpl(callback) {
         this.azureQueueService.getMessages(this.config.queueName, (err, messages) => {
             if (err) return callback(err);
+            if (messages.length < 1) return callback();
 
             messages[0].body = JSON.parse(messages[0].messageText);
 
             return callback(null, messages[0]);
         });
+    }
+
+    dequeue(callback) {
+        let message;
+
+        async.whilst(
+            () => { return message === undefined; },
+            dequeueCallback => {
+                this.dequeueImpl((err, receivedMessage) => {
+                    let backoff = 0;
+                    if (err || !receivedMessage) {
+                        if (err) console.error(err);
+                        //console.log(`${this.id}: azure queue backing off: ${this.config.queueBackoff}`);
+                        backoff = this.config.queueBackoff;
+                    }
+
+                    message = receivedMessage;
+
+                    return setTimeout(dequeueCallback, backoff);
+                });
+            }, err => {
+                return callback(null, message);
+            }
+        );
     }
 }
 

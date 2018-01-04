@@ -6,16 +6,21 @@ class AzureQueueConnection extends Connection {
     constructor(config) {
         super(config);
 
-        this.config.queueBackoff = 1000;
+        this.pausedBackoff = this.pausedBackoff || 50; // ms
+        this.emptyBackoff = this.pausedBackoff || 1000; // ms
     }
 
     start(callback) {
-        this.azureQueueService = azure.createQueueService(
-            this.config.storageAccount,
-            this.config.storageKey
-        );
+        super.start(err => {
+            if (err) return callback(err);
 
-        this.azureQueueService.createQueueIfNotExists(this.config.queueName, callback);
+            this.azureQueueService = azure.createQueueService(
+                this.config.storageAccount,
+                this.config.storageKey
+            );
+
+            this.azureQueueService.createQueueIfNotExists(this.config.queueName, callback);
+        });
     }
 
     complete(message, callback) {
@@ -46,14 +51,17 @@ class AzureQueueConnection extends Connection {
         let message;
 
         async.whilst(
-            () => { return message === undefined; },
+            () => { return this.started && message === undefined; },
             dequeueCallback => {
+                if (this.paused) {
+                    return setTimeout(dequeueCallback, this.pausedBackoff);
+                }
+
                 this.dequeueImpl((err, receivedMessage) => {
                     let backoff = 0;
                     if (err || !receivedMessage) {
                         if (err) console.error(err);
-                        //console.log(`${this.id}: azure queue backing off: ${this.config.queueBackoff}`);
-                        backoff = this.config.queueBackoff;
+                        backoff = this.emptyBackoff;
                     }
 
                     message = receivedMessage;
@@ -62,6 +70,21 @@ class AzureQueueConnection extends Connection {
                 });
             }, err => {
                 return callback(null, message);
+            }
+        );
+    }
+
+    stream(callback) {
+        async.whilst(
+            () => {
+                return this.started;
+            }, iterationCallback => {
+                this.dequeue( (err, message) => {
+                    callback(err, message);
+                    return iterationCallback();
+                });
+            }, err => {
+                console.log(`${this.id}: message loop for input stopping. err: ${err}`);
             }
         );
     }

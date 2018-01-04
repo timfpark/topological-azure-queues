@@ -2,10 +2,12 @@ const assert = require('assert');
 const fixtures = require('../fixtures');
 
 describe('AzureQueueConnection', function() {
-    it('can queue and dequeue messages', done => {
-         fixtures.connection.start(err => {
+    it('can enqueue, pause, resume, and stream messages', done => {
+        let receivedMessage = false;
+
+        fixtures.connection.start(err => {
             assert(!err);
-            fixtures.connection.dequeue((err, message) => {
+            fixtures.connection.stream((err, message) => {
                 assert(!err);
                 assert(message);
 
@@ -14,15 +16,22 @@ describe('AzureQueueConnection', function() {
                 fixtures.connection.complete(message, done);
             });
 
+            // wait so that we test retries
             setTimeout( () => {
-                fixtures.connection.enqueue([{
-                    body: {
-                        number: 1
-                    }
-                }], err => {
+                fixtures.connection.pause(err => {
                     assert(!err);
+                    fixtures.connection.enqueue([{
+                        body: {
+                            number: 1
+                        }
+                    }], err => {
+                        assert(!err);
+                        fixtures.connection.resume(err => {
+                            assert(!err);
+                        });
+                    });
                 });
-            }, 3000);
-         });
+            }, 2000);
+        });
      });
 });

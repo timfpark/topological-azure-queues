@@ -13,7 +13,7 @@ describe('AzureQueueConnection', function() {
 
                 assert(message.body.number, 1);
 
-                fixtures.connection.complete(message, done);
+                fixtures.connection.succeeded(message, done);
             });
 
             // wait so that we test retries

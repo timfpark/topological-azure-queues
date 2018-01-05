@@ -23,7 +23,7 @@ class AzureQueueConnection extends Connection {
         });
     }
 
-    complete(message, callback) {
+    succeeded(message, callback) {
         if (!callback) {
             callback = () => {};
         }

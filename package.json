@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "azure-storage": "^2.7.0",
-    "topological": "^1.0.15"
+    "topological": "^1.0.17"
   },
   "devDependencies": {
     "mocha": "^4.0.1"

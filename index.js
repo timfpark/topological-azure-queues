@@ -6,6 +6,8 @@ class AzureQueueConnection extends Connection {
     constructor(config) {
         super(config);
 
+        this.config.visibilityTimeout = this.config.visibilityTimeout || 5 * 60, // seconds
+
         this.pausedBackoff = this.pausedBackoff || 50; // ms
         this.emptyBackoff = this.pausedBackoff || 1000; // ms
     }
@@ -37,7 +39,9 @@ class AzureQueueConnection extends Connection {
     }
 
     dequeueImpl(callback) {
-        this.azureQueueService.getMessages(this.config.queueName, (err, messages) => {
+        this.azureQueueService.getMessages(this.config.queueName, {
+            visibilityTimeout: this.config.visibilityTimeout
+        }, (err, messages) => {
             if (err) return callback(err);
             if (messages.length < 1) return callback();
 

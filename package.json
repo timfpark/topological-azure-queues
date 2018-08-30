@@ -1,6 +1,6 @@
 {
   "name": "topological-azure-queue",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,8 +9,9 @@
   "author": "Tim Park",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.6.1",
     "azure-storage": "^2.7.0",
-    "topological": "^1.0.17"
+    "topological": "^1.0.34"
   },
   "devDependencies": {
     "mocha": "^4.0.1"

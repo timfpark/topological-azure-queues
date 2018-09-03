@@ -102,7 +102,7 @@ class AzureQueueConnection extends Connection {
                 this.dequeueImpl((err, receivedMessage) => {
                     let backoff = 0;
                     if (err || !receivedMessage) {
-                        if (err) console.error(err);
+                        if (err) this.log.error(`error in dequeue: ${err}`);
                         backoff = this.emptyBackoff;
                     }
 
